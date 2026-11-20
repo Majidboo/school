@@ -32,7 +32,7 @@ HEADERS = {
         "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML,"
         " like Gecko) Chrome/120.0.0.0 Safari/537.36"
     ),
-    "Accept": "application/json, text/plain, /",
+    "Accept": "application/json, text/plain, */*",
     "Accept-Language": "en-US,en;q=0.9",
     "Origin": "https://phronesis-pre-schooler.kesug.com",
     "Referer": "https://phronesis-pre-schooler.kesug.com/",
@@ -86,6 +86,9 @@ timed_out_students = set()
 completed_scan_keys = set()
 CACHE_FILE = "scanned_cache.json"
 today_date = datetime.now().strftime("%Y-%m-%d")
+
+# Cache of student names (populated when students are fetched)
+student_names = {}
 
 # Helper function to save tracking state to local cache
 def save_scanned_cache():
@@ -187,6 +190,8 @@ try:
             )
             if safe_sid:
                 synced_student_ids.add(safe_sid)
+                # Cache the name so we can send it on log_attendance
+                student_names[safe_sid] = s.get("first_name", "")
 
             img_data = s.get("face_image")
 
@@ -650,6 +655,7 @@ while True:
                                 "student_id": student_id,
                                 "status": status,
                                 "session": session_val,
+                                "sname": student_names.get(student_id, ""),
                             }
 
                             resp = make_api_request(API_URL, payload)
