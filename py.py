@@ -125,20 +125,26 @@ def sync_attendance_from_api(quiet=False):
             new_checked_in = set()
             new_timed_out = set()
             new_completed_keys = set()
+            
             for record in att_result.get("attendance", []):
                 s_id = str(record.get("student_id", "")).strip()
                 status_val = str(record.get("status", "")).upper()
                 sess_val = str(record.get("session", "")).upper().strip()
+                time_out_val = record.get("time_out")
+                
                 if s_id:
-                    if "OUT" in status_val:
+                    # If there is a time_out value, they have timed out
+                    if time_out_val and str(time_out_val).strip().lower() not in ("", "n/a", "null"):
                         new_timed_out.add(s_id)
                         new_checked_in.add(s_id)
                         if sess_val:
                             new_completed_keys.add(f"{today_date}:{s_id}:{sess_val}:OUT")
+                            new_completed_keys.add(f"{today_date}:{s_id}:{sess_val}:IN")
                     else:
                         new_checked_in.add(s_id)
                         if sess_val:
                             new_completed_keys.add(f"{today_date}:{s_id}:{sess_val}:IN")
+                            
             checked_in_students = new_checked_in
             timed_out_students = new_timed_out
             completed_scan_keys = new_completed_keys
